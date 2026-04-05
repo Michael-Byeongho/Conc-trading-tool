@@ -11,6 +11,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- 0. Config & Style ---
+st.set_page_config(page_title="Trade-off & Sensitivity Tool", layout="wide")
+
+# 무조건 White 모드로 고정하는 CSS
+st.markdown("""
+    <style>
+        /* 기본 배경과 글자색 강제 고정 */
+        html, body, [data-testid="stAppViewContainer"] {
+            background-color: white !important;
+            color: #2c3e50 !important;
+        }
+        /* 사이드바 배경 고정 */
+        [data-testid="stSidebar"] {
+            background-color: #f8f9fa !important;
+        }
+        /* 입력창 라벨 색상 고정 */
+        .stMarkdown, p, span, label {
+            color: #2c3e50 !important;
+        }
+        /* 위젯 내부 텍스트 색상 */
+        .stNumberInput input, .stSelectbox div {
+            color: #2c3e50 !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
 # --- 1. Core Logic (PD 가치 계산 시 RC 배제) ---
 def calc_unit_net(mode, tc, cu_p, cu_a, cu_py, cu_rc, cu_dt, cu_dv, au_p, au_a, au_py, au_rc, au_dt, au_dv, ag_p, ag_a, ag_py, ag_rc, ag_dt, ag_dv):
     g_to_oz, lb_to_mt = 1/31.1035, 2204.62
