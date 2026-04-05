@@ -84,27 +84,31 @@ cases = [("A (Base)안", "a", 80.0), ("B안", "b", 80.0), ("C안", "c", 80.0)]
 with tab1:
     for name, k, def_tc in cases:
         with st.expander(f"📍 {name} 상세 설정", expanded=(k=='a')):
-            st.markdown(f"<div class='section-head'>Payable Metals</div>", unsafe_allow_html=True)
-            data[f"cu_py_{k}"] = st.number_input(f"Cu Pay (%)", value=100.0, key=f"cp_{k}")
-            data[f"cu_dv_{k}"] = st.number_input(f"Cu PD/MD (%)", value=1.0, key=f"cdv_{k}")
-            data[f"ag_py_{k}"] = st.number_input(f"Ag Pay (%)", value=90.0, key=f"ap_{k}")
-            data[f"ag_dv_{k}"] = st.number_input(f"Ag PD/MD (g/t)", value=30.0, key=f"adv_{k}")
-            data[f"au_py_{k}"] = st.number_input(f"Au Pay (%)", value=90.0, key=f"aup_{k}")
-            data[f"au_dv_{k}"] = st.number_input(f"Au PD/MD (g/t)", value=1.0, key=f"audv_{k}")
+            # --- 구리(Cu) 설정 ---
+            st.markdown(f"<div class='section-head'>Cu (Copper)</div>", unsafe_allow_html=True)
+            data[f"cu_py_{k}"] = st.number_input(f"Cu Pay (%)", value=100.0, key=f"cp_{k}", step=0.1)
+            # PD/MD 선택 라디오 버튼 부활
+            data[f"cu_dt_{k}"] = st.radio(f"Cu Deduction Type", ["PD", "MD"], horizontal=True, key=f"cdt_{k}")
+            data[f"cu_dv_{k}"] = st.number_input(f"Cu {data[f'cu_dt_{k}']} Value (%)", value=1.0, key=f"cdv_{k}", step=0.01)
             
+            # --- 은(Ag) 설정 ---
+            st.markdown(f"<div class='section-head'>Ag (Silver)</div>", unsafe_allow_html=True)
+            data[f"ag_py_{k}"] = st.number_input(f"Ag Pay (%)", value=90.0, key=f"ap_{k}", step=0.1)
+            data[f"ag_dt_{k}"] = st.radio(f"Ag Deduction Type", ["PD", "MD"], horizontal=True, key=f"adt_{k}")
+            data[f"ag_dv_{k}"] = st.number_input(f"Ag {data[f'ag_dt_{k}']} Value (g/t)", value=30.0, key=f"adv_{k}", step=0.1)
+
+            # --- 금(Au) 설정 ---
+            st.markdown(f"<div class='section-head'>Au (Gold)</div>", unsafe_allow_html=True)
+            data[f"au_py_{k}"] = st.number_input(f"Au Pay (%)", value=90.0, key=f"aup_{k}", step=0.1)
+            data[f"au_dt_{k}"] = st.radio(f"Au Deduction Type", ["PD", "MD"], horizontal=True, key=f"audt_{k}")
+            data[f"au_dv_{k}"] = st.number_input(f"Au {data[f'au_dt_{k}']} Value (g/t)", value=1.0, key=f"audv_{k}", step=0.01)
+            
+            # --- 비용(Costs) 설정 ---
             st.markdown(f"<div class='section-head'>Costs (TC/RC)</div>", unsafe_allow_html=True)
-            data[f"tc_{k}"] = st.number_input(f"TC ($/t)", value=def_tc, key=f"tc_{k}")
-            data[f"cu_rc_{k}"] = st.number_input(f"Cu RC (c/lb)", value=8.0, key=f"curc_{k}")
-            data[f"ag_rc_{k}"] = st.number_input(f"Ag RC ($/oz)", value=0.5, key=f"agrc_{k}")
-            data[f"au_rc_{k}"] = st.number_input(f"Au RC ($/oz)", value=5.0, key=f"aurc_{k}")
-            # 필요한 기본값 채우기
-            data[f"cu_dt_{k}"] = "PD"; data[f"ag_dt_{k}"] = "PD"; data[f"au_dt_{k}"] = "PD"
-
-# 계산 수행
-res = {k: calc_unit_net(mode, data[f"tc_{k}"], cu_p, cu_a, data[f"cu_py_{k}"], data[f"cu_rc_{k}"], data[f"cu_dt_{k}"], data[f"cu_dv_{k}"],
-                        au_p, au_a, data[f"au_py_{k}"], data[f"au_rc_{k}"], data[f"au_dt_{k}"], data[f"au_dv_{k}"],
-                        ag_p, ag_a, data[f"ag_py_{k}"], data[f"ag_rc_{k}"], data[f"ag_dt_{k}"], data[f"ag_dv_{k}"]) for _, k, _ in cases}
-
+            data[f"tc_{k}"] = st.number_input(f"TC ($/t)", value=def_tc, key=f"tc_{k}", step=0.1)
+            data[f"cu_rc_{k}"] = st.number_input(f"Cu RC (c/lb)", value=8.0, key=f"curc_{k}", step=0.01)
+            data[f"ag_rc_{k}"] = st.number_input(f"Ag RC ($/oz)", value=0.5, key=f"agrc_{k}", step=0.01)
+            data[f"au_rc_{k}"] = st.number_input(f"Au RC ($/oz)", value=5.0, key=f"aurc_{k}", step=0.1)
 with tab2:
     st.markdown("### 📈 수익성 비교")
     m1, m2, m3 = st.columns(3)
