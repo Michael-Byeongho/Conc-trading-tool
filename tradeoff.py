@@ -1,6 +1,14 @@
 import streamlit as st
 import pandas as pd
-
+st.markdown("""
+    <style>
+        /* 강제 라이트모드 스타일 */
+        :root { --primary-color: #2e4053; }
+        [data-testid="stAppViewContainer"] { background-color: white !important; color: black !important; }
+        [data-testid="stHeader"] { background-color: white !important; }
+        [data-testid="stSidebar"] { background-color: #f8f9fa !important; }
+    </style>
+""", unsafe_allow_html=True)
 # --- 0. Config & Style ---
 st.set_page_config(page_title="Trade-off & Sensitivity Tool", layout="wide")
 st.markdown("""
