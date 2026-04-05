@@ -61,56 +61,73 @@ with st.sidebar:
     mode = st.sidebar.radio("거래 포지션", ["Purchase (매입)", "Sales (매출)"], horizontal=True)
     res_area = st.empty()
 
-# --- 3. Main Inputs ---
-with st.expander("⚙️ 시장 가격 및 품위 (공통)", expanded=True):
+# --- 3. Main Inputs & Tabs ---
+# 공통 시장 가격은 상단에 작게 배치 (공간 절약)
+with st.expander("🌍 공통 시장 가격 및 품위", expanded=False):
     c1, c2, c3 = st.columns(3)
     with c1:
-        cu_p = st.number_input("Cu Price ($/MT)", value=12000.0, step=1.0, min_value=None)
-        cu_a = st.number_input("Cu Assay (%)", value=25.0, step=0.01, min_value=None)
+        cu_p = st.number_input("Cu ($/MT)", value=12000.0, step=1.0)
+        cu_a = st.number_input("Cu (%)", value=25.0, step=0.01)
     with c2:
-        ag_p = st.number_input("Ag Price ($/Oz)", value=70.0, step=0.01, min_value=None)
-        ag_a = st.number_input("Ag Assay (g/DMT)", value=50.0, step=0.1, min_value=None)
+        ag_p = st.number_input("Ag ($/Oz)", value=70.0, step=0.01)
+        ag_a = st.number_input("Ag (g/t)", value=50.0, step=0.1)
     with c3:
-        au_p = st.number_input("Au Price ($/Oz)", value=4500.0, step=1.0, min_value=None)
-        au_a = st.number_input("Au Assay (g/DMT)", value=10.0, step=0.1, min_value=None)
+        au_p = st.number_input("Au ($/Oz)", value=4500.0, step=1.0)
+        au_a = st.number_input("Au (g/t)", value=10.0, step=0.1)
 
-st.markdown("### ⚖️ 조건 비교 (A vs B vs C)")
-cols = st.columns(3)
-data = {}
-cases = [("A (Base)안", "a", 80.0), ("B안", "b", 80.0), ("C안", "c", 80.0)]
+# 📱 모바일 최적화를 위한 탭 생성
+tab1, tab2, tab3 = st.tabs(["📝 조건 입력", "📊 결과 비교", "🎯 협상 가이드"])
 
-for i, (name, k, def_tc) in enumerate(cases):
-    with cols[i]:
-        st.markdown(f"<div class='section-head'>{name}</div>", unsafe_allow_html=True)
-        st.write("**[Payable Metals]**")
-        data[f"cu_py_{k}"] = st.number_input("Cu Pay (%)", value=100.0, key=f"cp_{k}", step=0.1, min_value=None)
-        data[f"cu_dt_{k}"] = st.radio("Cu deductions", ["PD", "MD"], horizontal=True, key=f"cdt_{k}")
-        data[f"cu_dv_{k}"] = st.number_input("Cu PD/MD (%)", value=1.0, key=f"cdv_{k}", step=0.01, min_value=None)
-        if data[f"cu_py_{k}"] != 100:
-            be_cu = abs(data[f"cu_dv_{k}"] / (1 - data[f"cu_py_{k}"]/100))
-            st.markdown(f"<p class='md-hint'>💡 MD 분기점: Cu {be_cu:.2f}%</p>", unsafe_allow_html=True)
-        
-        st.write("---")
-        data[f"ag_py_{k}"] = st.number_input("Ag Pay (%)", value=90.0, key=f"ap_{k}", step=0.1, min_value=None)
-        data[f"ag_dt_{k}"] = st.radio("Ag Duductions", ["PD", "MD"], horizontal=True, key=f"adt_{k}")
-        data[f"ag_dv_{k}"] = st.number_input("Ag PD/MD (g/t)", value=30.0, key=f"adv_{k}", step=0.1, min_value=None)
-        if data[f"ag_py_{k}"] != 100:
-            be_ag = abs(data[f"ag_dv_{k}"] / (1 - data[f"ag_py_{k}"]/100))
-            st.markdown(f"<p class='md-hint'>💡 MD 분기점: Ag {be_ag:.1f}g</p>", unsafe_allow_html=True)
+with tab1:
+    st.markdown("### ⚖️ 안별 조건 설정")
+    # 기존 cols = st.columns(3)를 모바일에서는 세로로 보여주되, expander로 감싸서 압축
+    cases = [("A (Base)안", "a", 80.0), ("B안", "b", 80.0), ("C안", "c", 80.0)]
+    
+    for name, k, def_tc in cases:
+        with st.expander(f"📍 {name} 상세 설정", expanded=(k=='a')): # A안만 열어두기
+            st.write("**[Payables]**")
+            data[f"cu_py_{k}"] = st.number_input("Cu Pay (%)", value=100.0, key=f"cp_{k}")
+            data[f"cu_dv_{k}"] = st.number_input("Cu PD/MD (%)", value=1.0, key=f"cdv_{k}")
+            
+            st.write("---")
+            data[f"ag_py_{k}"] = st.number_input("Ag Pay (%)", value=90.0, key=f"ap_{k}")
+            data[f"ag_dv_{k}"] = st.number_input("Ag PD/MD (g/t)", value=30.0, key=f"adv_{k}")
 
-        st.write("---")
-        data[f"au_py_{k}"] = st.number_input("Au Pay (%)", value=90.0, key=f"aup_{k}", step=0.1, min_value=None)
-        data[f"au_dt_{k}"] = st.radio("Au Duductions", ["PD", "MD"], horizontal=True, key=f"audt_{k}")
-        data[f"au_dv_{k}"] = st.number_input("Au PD/MD (g/t)", value=1.0, key=f"audv_{k}", step=0.01, min_value=None)
-        if data[f"au_py_{k}"] != 100:
-            be_au = abs(data[f"au_dv_{k}"] / (1 - data[f"au_py_{k}"]/100))
-            st.markdown(f"<p class='md-hint'>💡 MD 분기점: Au {be_au:.1f}g</p>", unsafe_allow_html=True)
-        
-        st.markdown(f"<div class='section-head'>📉 Deductions</div>", unsafe_allow_html=True)
-        data[f"tc_{k}"] = st.number_input("TC ($/DMT)", value=def_tc, key=f"tc_{k}", step=0.1, min_value=None)
-        data[f"cu_rc_{k}"] = st.number_input("Cu RC (c/lb)", value=8.0, key=f"curc_{k}", step=0.01, min_value=None)
-        data[f"ag_rc_{k}"] = st.number_input("Ag RC ($/oz)", value=0.5, key=f"agrc_{k}", step=0.01, min_value=None)
-        data[f"au_rc_{k}"] = st.number_input("Au RC ($/oz)", value=5.0, key=f"aurc_{k}", step=0.1, min_value=None)
+            st.write("---")
+            data[f"au_py_{k}"] = st.number_input("Au Pay (%)", value=90.0, key=f"aup_{k}")
+            data[f"au_dv_{k}"] = st.number_input("Au PD/MD (g/t)", value=1.0, key=f"audv_{k}")
+            
+            st.markdown(f"<div class='section-head'>📉 Costs</div>", unsafe_allow_html=True)
+            data[f"tc_{k}"] = st.number_input("TC ($/t)", value=def_tc, key=f"tc_{k}")
+            data[f"cu_rc_{k}"] = st.number_input("Cu RC (c/lb)", value=8.0, key=f"curc_{k}")
+            data[f"ag_rc_{k}"] = st.number_input("Ag RC ($/oz)", value=0.5, key=f"agrc_{k}")
+            data[f"au_rc_{k}"] = st.number_input("Au RC ($/oz)", value=5.0, key=f"aurc_{k}")
+            # 불필요한 radio(PD/MD 선택) 등은 생략하거나 data에 기본값 할당 (계산 오류 방지용)
+            data[f"cu_dt_{k}"] = "PD"; data[f"ag_dt_{k}"] = "PD"; data[f"au_dt_{k}"] = "PD"
+
+with tab2:
+    st.markdown("### 📈 수익성 비교")
+    # 계산 로직 실행 (res 딕셔너리 생성 부분)
+    res = {k: calc_unit_net(mode, data[f"tc_{k}"], cu_p, cu_a, data[f"cu_py_{k}"], data[f"cu_rc_{k}"], data[f"cu_dt_{k}"], data[f"cu_dv_{k}"],
+                            au_p, au_a, data[f"au_py_{k}"], data[f"au_rc_{k}"], data[f"au_dt_{k}"], data[f"au_dv_{k}"],
+                            ag_p, ag_a, data[f"ag_py_{k}"], data[f"ag_rc_{k}"], data[f"ag_dt_{k}"], data[f"ag_dv_{k}"]) for _, k, _ in cases}
+    
+    # 결과 요약 카드 (세로로 길지 않게 한눈에 표시)
+    m1, m2, m3 = st.columns(3)
+    m1.metric("A안 (기준)", f"${abs(res['a']):,.2f}")
+    m2.metric("B안 이익", f"${abs(res['b']):,.2f}", f"{res['b'] - res['a']:,.2f}")
+    m3.metric("C안 이익", f"${abs(res['c']):,.2f}", f"{res['c'] - res['a']:,.2f}")
+    
+    # 여기에 차트(Plotly) 같은걸 넣으면 폰에서 보기 아주 좋습니다.
+
+with tab3:
+    # 🎯 여기에 이전에 만든 [# --- 6. 협상 타겟 계산 ---] 코드를 넣으면 됩니다.
+    st.markdown("### 🎯 Target TC 분석")
+    # (위에서 만든 Target TC 로직 코드 입력...)
+
+
+
+
 
 # --- 4. Calculation ---
 res = {k: calc_unit_net(mode, data[f"tc_{k}"], cu_p, cu_a, data[f"cu_py_{k}"], data[f"cu_rc_{k}"], data[f"cu_dt_{k}"], data[f"cu_dv_{k}"],
