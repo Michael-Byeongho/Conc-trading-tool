@@ -60,68 +60,112 @@ with st.sidebar:
     st.header("💰 실시간 요약")
     mode = st.sidebar.radio("거래 포지션", ["Purchase (매입)", "Sales (매출)"], horizontal=True)
     res_area = st.empty()
+# --- CSS: 모바일 최적화 (여백 줄이기 및 폰트 조정) ---
+st.markdown("""
+    <style>
+    /* 입력창 사이의 과도한 간격 줄이기 */
+    div[data-testid="stVerticalBlock"] > div {
+        margin-top: -10px;
+        margin-bottom: -10px;
+    }
+    /* 탭 메뉴 텍스트 크기 최적화 */
+    button[data-baseweb="tab"] {
+        font-size: 16px;
+        font-weight: bold;
+    }
+    /* 모바일에서 섹션 구분선 강조 */
+    .section-head {
+        background-color: #f0f2f6;
+        padding: 5px 10px;
+        border-radius: 5px;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    /* 힌트 텍스트 크기 조절 */
+    .md-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: -5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 결과 요약 상단 배치 (모바일 스크롤 방지) ---
+res_area = st.container()
 
 # --- 3. Main Inputs ---
-with st.expander("⚙️ 시장 가격 및 품위 (공통)", expanded=True):
+with st.expander("⚙️ 시장 가격 및 품위 (공통)", expanded=False): # 모바일 위해 기본 접힘
     c1, c2, c3 = st.columns(3)
     with c1:
-        cu_p = st.number_input("Cu Price ($/MT)", value=12000.0, step=1.0, min_value=None)
-        cu_a = st.number_input("Cu Assay (%)", value=25.0, step=0.01, min_value=None)
+        cu_p = st.number_input("Cu Price ($/MT)", value=12000.0, step=1.0)
+        cu_a = st.number_input("Cu Assay (%)", value=25.0, step=0.01)
     with c2:
-        ag_p = st.number_input("Ag Price ($/Oz)", value=70.0, step=0.01, min_value=None)
-        ag_a = st.number_input("Ag Assay (g/DMT)", value=50.0, step=0.1, min_value=None)
+        ag_p = st.number_input("Ag Price ($/Oz)", value=70.0, step=0.01)
+        ag_a = st.number_input("Ag Assay (g/DMT)", value=50.0, step=0.1)
     with c3:
-        au_p = st.number_input("Au Price ($/Oz)", value=4500.0, step=1.0, min_value=None)
-        au_a = st.number_input("Au Assay (g/DMT)", value=10.0, step=0.1, min_value=None)
+        au_p = st.number_input("Au Price ($/Oz)", value=4500.0, step=1.0)
+        au_a = st.number_input("Au Assay (g/DMT)", value=10.0, step=0.1)
 
 st.markdown("### ⚖️ 조건 비교 (A vs B vs C)")
-cols = st.columns(3)
+
+# 가로로 너무 긴 컬럼 대신 탭(Tabs) 사용
+tab_titles = ["A (Base)안", "B안", "C안"]
+tabs = st.tabs(tab_titles)
+
 data = {}
-cases = [("A (Base)안", "a", 80.0), ("B안", "b", 80.0), ("C안", "c", 80.0)]
+cases = [("a", 80.0), ("b", 80.0), ("c", 80.0)]
 
-for i, (name, k, def_tc) in enumerate(cases):
-    with cols[i]:
-        st.markdown(f"<div class='section-head'>{name}</div>", unsafe_allow_html=True)
-        st.write("**[Payable Metals]**")
-        data[f"cu_py_{k}"] = st.number_input("Cu Pay (%)", value=100.0, key=f"cp_{k}", step=0.1, min_value=None)
-        data[f"cu_dt_{k}"] = st.radio("Cu deductions", ["PD", "MD"], horizontal=True, key=f"cdt_{k}")
-        data[f"cu_dv_{k}"] = st.number_input("Cu PD/MD (%)", value=1.0, key=f"cdv_{k}", step=0.01, min_value=None)
-        if data[f"cu_py_{k}"] != 100:
-            be_cu = abs(data[f"cu_dv_{k}"] / (1 - data[f"cu_py_{k}"]/100))
-            st.markdown(f"<p class='md-hint'>💡 MD 분기점: Cu {be_cu:.2f}%</p>", unsafe_allow_html=True)
+for i, (k, def_tc) in enumerate(cases):
+    with tabs[i]:
+        # Payable Metals 섹션
+        st.markdown("<div class='section-head'>💰 Payable Metals</div>", unsafe_allow_html=True)
         
-        st.write("---")
-        data[f"ag_py_{k}"] = st.number_input("Ag Pay (%)", value=90.0, key=f"ap_{k}", step=0.1, min_value=None)
-        data[f"ag_dt_{k}"] = st.radio("Ag Duductions", ["PD", "MD"], horizontal=True, key=f"adt_{k}")
-        data[f"ag_dv_{k}"] = st.number_input("Ag PD/MD (g/t)", value=30.0, key=f"adv_{k}", step=0.1, min_value=None)
-        if data[f"ag_py_{k}"] != 100:
-            be_ag = abs(data[f"ag_dv_{k}"] / (1 - data[f"ag_py_{k}"]/100))
-            st.markdown(f"<p class='md-hint'>💡 MD 분기점: Ag {be_ag:.1f}g</p>", unsafe_allow_html=True)
-
-        st.write("---")
-        data[f"au_py_{k}"] = st.number_input("Au Pay (%)", value=90.0, key=f"aup_{k}", step=0.1, min_value=None)
-        data[f"au_dt_{k}"] = st.radio("Au Duductions", ["PD", "MD"], horizontal=True, key=f"audt_{k}")
-        data[f"au_dv_{k}"] = st.number_input("Au PD/MD (g/t)", value=1.0, key=f"audv_{k}", step=0.01, min_value=None)
-        if data[f"au_py_{k}"] != 100:
-            be_au = abs(data[f"au_dv_{k}"] / (1 - data[f"au_py_{k}"]/100))
-            st.markdown(f"<p class='md-hint'>💡 MD 분기점: Au {be_au:.1f}g</p>", unsafe_allow_html=True)
+        # Cu
+        data[f"cu_py_{k}"] = st.number_input("Cu Pay (%)", value=100.0, key=f"cp_{k}", step=0.1)
+        c1, c2 = st.columns(2)
+        with c1: data[f"cu_dt_{k}"] = st.radio("Cu type", ["PD", "MD"], horizontal=True, key=f"cdt_{k}")
+        with c2: data[f"cu_dv_{k}"] = st.number_input("Cu Val", value=1.0, key=f"cdv_{k}", step=0.01)
         
-        st.markdown(f"<div class='section-head'>📉 Deductions</div>", unsafe_allow_html=True)
-        data[f"tc_{k}"] = st.number_input("TC ($/DMT)", value=def_tc, key=f"tc_{k}", step=0.1, min_value=None)
-        data[f"cu_rc_{k}"] = st.number_input("Cu RC (c/lb)", value=8.0, key=f"curc_{k}", step=0.01, min_value=None)
-        data[f"ag_rc_{k}"] = st.number_input("Ag RC ($/oz)", value=0.5, key=f"agrc_{k}", step=0.01, min_value=None)
-        data[f"au_rc_{k}"] = st.number_input("Au RC ($/oz)", value=5.0, key=f"aurc_{k}", step=0.1, min_value=None)
+        # Ag
+        st.divider()
+        data[f"ag_py_{k}"] = st.number_input("Ag Pay (%)", value=90.0, key=f"ap_{k}", step=0.1)
+        c1, c2 = st.columns(2)
+        with c1: data[f"ag_dt_{k}"] = st.radio("Ag type", ["PD", "MD"], horizontal=True, key=f"adt_{k}")
+        with c2: data[f"ag_dv_{k}"] = st.number_input("Ag Val", value=30.0, key=f"adv_{k}", step=0.1)
 
-# --- 4. Calculation ---
-res = {k: calc_unit_net(mode, data[f"tc_{k}"], cu_p, cu_a, data[f"cu_py_{k}"], data[f"cu_rc_{k}"], data[f"cu_dt_{k}"], data[f"cu_dv_{k}"],
+        # Au
+        st.divider()
+        data[f"au_py_{k}"] = st.number_input("Au Pay (%)", value=90.0, key=f"aup_{k}", step=0.1)
+        c1, c2 = st.columns(2)
+        with c1: data[f"au_dt_{k}"] = st.radio("Au type", ["PD", "MD"], horizontal=True, key=f"audt_{k}")
+        with c2: data[f"au_dv_{k}"] = st.number_input("Au Val", value=1.0, key=f"audv_{k}", step=0.01)
+        
+        # Deductions 섹션
+        st.markdown("<div class='section-head'>📉 Deductions (TC/RC)</div>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            data[f"tc_{k}"] = st.number_input("TC ($/DMT)", value=def_tc, key=f"tc_{k}", step=0.1)
+            data[f"cu_rc_{k}"] = st.number_input("Cu RC (c/lb)", value=8.0, key=f"curc_{k}", step=0.01)
+        with col2:
+            data[f"ag_rc_{k}"] = st.number_input("Ag RC ($/oz)", value=0.5, key=f"agrc_{k}", step=0.01)
+            data[f"au_rc_{k}"] = st.number_input("Au RC ($/oz)", value=5.0, key=f"aurc_{k}", step=0.1)
+
+# --- 4. Calculation & Result Display ---
+# calc_unit_net 함수가 정의되어 있다고 가정합니다.
+res = {k: calc_unit_net("mode_placeholder", data[f"tc_{k}"], cu_p, cu_a, data[f"cu_py_{k}"], data[f"cu_rc_{k}"], data[f"cu_dt_{k}"], data[f"cu_dv_{k}"],
                         au_p, au_a, data[f"au_py_{k}"], data[f"au_rc_{k}"], data[f"au_dt_{k}"], data[f"au_dv_{k}"],
-                        ag_p, ag_a, data[f"ag_py_{k}"], data[f"ag_rc_{k}"], data[f"ag_dt_{k}"], data[f"ag_dv_{k}"]) for _, k, _ in cases}
+                        ag_p, ag_a, data[f"ag_py_{k}"], data[f"ag_rc_{k}"], data[f"ag_dt_{k}"], data[f"ag_dv_{k}"]) for k, _ in [("a", 80), ("b", 80), ("c", 80)]}
 
-with res_area.container():
-    st.markdown("---")
-    st.metric("A (비교기준값)", f"${abs(res['a']):,.2f} /t")
-    st.metric("B안 이익 (vs A)", f"${abs(res['b']):,.2f} /t", f"{res['b'] - res['a']:,.2f}")
-    st.metric("C안 이익 (vs A)", f"${abs(res['c']):,.2f} /t", f"{res['c'] - res['a']:,.2f}")
+# 맨 위 컨테이너에 결과 업데이트
+with res_area:
+    st.markdown("### 📊 Net Value 결과")
+    m1, m2, m3 = st.columns(3)
+    m1.metric(tab_titles[0], f"${abs(res['a']):,.1f}")
+    m2.metric(tab_titles[1], f"${abs(res['b']):,.1f}", f"{res['b'] - res['a']:,.1f}")
+    m3.metric(tab_titles[2], f"${abs(res['c']):,.1f}", f"{res['c'] - res['a']:,.1f}")
+    st.divider()
 
 
 
