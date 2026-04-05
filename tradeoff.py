@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 
 # --- 0. Config & Style ---
 st.set_page_config(page_title="Trade-off & Sensitivity Tool", layout="wide")
